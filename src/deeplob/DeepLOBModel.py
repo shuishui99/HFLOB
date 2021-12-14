@@ -14,8 +14,7 @@ from torchinfo import summary
 import torch.nn as nn
 import numpy as np
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
+
 
 
 def prepare_x(data):
@@ -78,21 +77,22 @@ class Dataset(data.Dataset):
         """Generates samples of data"""
         return self.x[index], self.y[index]
 
-dec_data = np.loadtxt('/home/yuan/jam/data/FI-2010/Train_Dst_NoAuction_DecPre_CF_7.txt')
-dec_train = dec_data[:, :int(np.floor(dec_data.shape[1] * 0.8))]
-
-batch_size = 64
-
-dataset_train = Dataset(data=dec_train, k=4, num_classes=3, T=100)
-train_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=batch_size, shuffle=True)
-tmp_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=1, shuffle=True)
-
+# dec_data = np.loadtxt('/home/yuan/jam/data/FI-2010/Train_Dst_NoAuction_DecPre_CF_7.txt')
+# dec_train = dec_data[:, :int(np.floor(dec_data.shape[1] * 0.8))]
+#
+# batch_size = 64
+#
+# dataset_train = Dataset(data=dec_train, k=4, num_classes=3, T=100)
+# train_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=batch_size, shuffle=True)
+# tmp_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=1, shuffle=True)
+#
 
 
 class deepLob(nn.Module):
-    def __init__(self, yLen):
+    def __init__(self, yLen, device):
         super(deepLob, self).__init__()
         self.yLen = yLen
+        self.device = device
 
         #convolution layer
         '''
@@ -168,8 +168,8 @@ class deepLob(nn.Module):
 
     def forward(self, x):
 
-        h0 = torch.zeros(1, x.size(0), 64).to(device)
-        c0 = torch.zeros(1, x.size(0), 64).to(device)
+        h0 = torch.zeros(1, x.size(0), 64).to(self.device)
+        c0 = torch.zeros(1, x.size(0), 64).to(self.device)
 
 
         # x.shape = [batch, channel, h, w] = [64, 1, 100, 40]
@@ -200,32 +200,32 @@ class deepLob(nn.Module):
         x = self.fc1(x)
         forecast_y = torch.softmax(x, dim=1)
 
-        print(forecast_y.shape)
+        # print(forecast_y.shape)
 
         return forecast_y
 
 
+#
+# dec_data = np.loadtxt('/home/yuan/jam/data/FI-2010/Train_Dst_NoAuction_DecPre_CF_7.txt')
+# dec_train = dec_data[:, :int(np.floor(dec_data.shape[1] * 0.8))]
+#
+# batch_size = 64
+#
+# dataset_train = Dataset(data=dec_train, k=4, num_classes=3, T=100)
+# train_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=batch_size, shuffle=True)
+# tmp_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=1, shuffle=True)
+#
 
-dec_data = np.loadtxt('/home/yuan/jam/data/FI-2010/Train_Dst_NoAuction_DecPre_CF_7.txt')
-dec_train = dec_data[:, :int(np.floor(dec_data.shape[1] * 0.8))]
-
-batch_size = 64
-
-dataset_train = Dataset(data=dec_train, k=4, num_classes=3, T=100)
-train_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=batch_size, shuffle=True)
-tmp_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=1, shuffle=True)
-
-
-
-model = deepLob(dataset_train.num_classes)
-model.to(device)
-
-for inputs, targets in train_loader:
-    # move data to GPU
-    inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device, dtype=torch.int64)
-    print("inputs.shape:", inputs.shape)
-    print("target.shape:", targets.shape)
-    outputs = model(inputs)
-    print("--------done!-----------")
-    # zero the parameter gradients
-    break
+#
+# model = deepLob(dataset_train.num_classes)
+# model.to(device)
+#
+# for inputs, targets in train_loader:
+#     # move data to GPU
+#     inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device, dtype=torch.int64)
+#     print("inputs.shape:", inputs.shape)
+#     print("target.shape:", targets.shape)
+#     outputs = model(inputs)
+#     print("--------done!-----------")
+#     # zero the parameter gradients
+#     break
